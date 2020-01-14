@@ -31,18 +31,17 @@ class Ns1Client(object):
 
     def _try(self, method, *args, **kwargs):
         tries = self.retry_count
-        while True:  # We'll raise to break after our tries expire
+        while tries:
             try:
                 return method(*args, **kwargs)
             except RateLimitException as e:
-                if tries <= 1:
-                    raise
                 period = float(e.period)
                 self.log.warn('rate limit encountered, pausing '
                               'for %ds and trying again, %d remaining',
                               period, tries)
                 sleep(period)
                 tries -= 1
+        raise
 
     def zones_retrieve(self, name):
         return self._try(self._zones.retrieve, name)
