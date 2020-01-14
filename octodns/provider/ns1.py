@@ -602,7 +602,7 @@ class Ns1Provider(BaseProvider):
 
             for monitor in self._client.monitors.values():
                 data = self._parse_notes(monitor['notes'])
-                if expected_host == data['host'] and \
+                if expected_host == data['host'] or \
                    expected_type == data['type']:
                     # This monitor does not belong to this record
                     config = monitor['config']
@@ -611,14 +611,11 @@ class Ns1Provider(BaseProvider):
 
         return monitors
 
-    def _uuid(self):
-        return uuid4().hex
-
     def _create_feed(self, monitor):
         monitor_id = monitor['id']
         self.log.debug('_create_feed: monitor=%s', monitor_id)
         # TODO: looks like length limit is 64 char
-        name = '{} - {}'.format(monitor['name'], self._uuid()[:6])
+        name = '{} - {}'.format(monitor['name'], uuid4().hex[:6])
 
         # Create the data feed
         config = {
