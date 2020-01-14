@@ -474,16 +474,16 @@ class TestNs1Provider(TestCase):
             'type': 'SPF',
             'value': 'foo\\; bar baz\\; blip'
         })
-        params, _ = provider._params_for_SPF(record)
-        self.assertEquals(['foo; bar baz; blip'], params['answers'])
+        self.assertEquals(['foo; bar baz; blip'],
+                          provider._params_for_SPF(record)['answers'])
 
         record = Record.new(zone, 'txt', {
             'ttl': 35,
             'type': 'TXT',
             'value': 'foo\\; bar baz\\; blip'
         })
-        params, _ = provider._params_for_SPF(record)
-        self.assertEquals(['foo; bar baz; blip'], params['answers'])
+        self.assertEquals(['foo; bar baz; blip'],
+                          provider._params_for_TXT(record)['answers'])
 
     def test_data_for_CNAME(self):
         provider = Ns1Provider('test', 'api-key')
