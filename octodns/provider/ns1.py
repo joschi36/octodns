@@ -175,9 +175,13 @@ class Ns1Provider(BaseProvider):
     ns1:
         class: octodns.provider.ns1.Ns1Provider
         api_key: env/NS1_API_KEY
+        # Needed if you want to manage your root NS records with octodns
+        # When you enable this you MUST specify a root NS.
+        manage_root_ns:
     '''
     SUPPORTS_GEO = True
-    SUPPORTS_DYNAMIC = True
+    SUPPORTS_DYNAMIC = False
+    SUPPORTS_ROOT_NS = True
     SUPPORTS = set(('A', 'AAAA', 'ALIAS', 'CAA', 'CNAME', 'MX', 'NAPTR',
                     'NS', 'PTR', 'SPF', 'SRV', 'TXT'))
 
@@ -224,12 +228,13 @@ class Ns1Provider(BaseProvider):
         'NA': ('US-CENTRAL', 'US-EAST', 'US-WEST'),
     }
 
-    def __init__(self, id, api_key, retry_count=4, *args, **kwargs):
+    def __init__(self, id, api_key, retry_count=4, manage_root_ns=False, *args,
+                 **kwargs):
         self.log = getLogger('Ns1Provider[{}]'.format(id))
         self.log.debug('__init__: id=%s, api_key=***, retry_count=%d', id,
                        retry_count)
-        super(Ns1Provider, self).__init__(id, *args, **kwargs)
-
+        super(Ns1Provider, self).__init__(id, manage_root_ns=manage_root_ns,
+                                          *args, **kwargs)
         self._client = Ns1Client(api_key, retry_count)
 
     def _encode_notes(self, data):

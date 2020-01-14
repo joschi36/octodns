@@ -600,6 +600,9 @@ class Route53Provider(BaseProvider):
         # The AWS session token (optional)
         # Only needed if using temporary security credentials
         session_token:
+        # Needed if you want to manage your root NS records with octodns
+        # When you enable this you MUST specify a root NS.
+        manage_root_ns:
 
     Alternatively, you may leave out access_key_id, secret_access_key
     and session_token.
@@ -609,6 +612,7 @@ class Route53Provider(BaseProvider):
     '''
     SUPPORTS_GEO = True
     SUPPORTS_DYNAMIC = True
+    SUPPORTS_ROOT_NS = True
     SUPPORTS = set(('A', 'AAAA', 'CAA', 'CNAME', 'MX', 'NAPTR', 'NS', 'PTR',
                     'SPF', 'SRV', 'TXT'))
 
@@ -618,7 +622,8 @@ class Route53Provider(BaseProvider):
 
     def __init__(self, id, access_key_id=None, secret_access_key=None,
                  max_changes=1000, client_max_attempts=None,
-                 session_token=None, delegation_set_id=None, *args, **kwargs):
+                 session_token=None, delegation_set_id=None, 
+                 manage_root_ns=False, *args, **kwargs):
         self.max_changes = max_changes
         self.delegation_set_id = delegation_set_id
         _msg = 'access_key_id={}, secret_access_key=***, ' \
@@ -629,7 +634,9 @@ class Route53Provider(BaseProvider):
             _msg = 'auth=fallback'
         self.log = logging.getLogger('Route53Provider[{}]'.format(id))
         self.log.debug('__init__: id=%s, %s', id, _msg)
-        super(Route53Provider, self).__init__(id, *args, **kwargs)
+        super(Route53Provider, self).__init__(id,
+                                              manage_root_ns=manage_root_ns,
+                                              *args, **kwargs)
 
         config = None
         if client_max_attempts is not None:
@@ -1355,6 +1362,11 @@ class Route53Provider(BaseProvider):
             # Generate the mods for this change
             mod_type = getattr(self, '_mod_{}'.format(c.__class__.__name__))
             mods = mod_type(c, zone_id, existing_rrsets)
+
+            # Rewrite NS Record to UPSERT because it always exists.
+            if mods[0]['Action'] == "CREATE" and \
+               mods[0]['ResourceRecordSet']['Type'] == "NS":
+                mods[0]['Action'] = "UPSERT"
 
             # Order our mods to make sure targets exist before alises point to
             # them and we CRUD in the desired order
