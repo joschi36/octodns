@@ -121,9 +121,7 @@ class Ns1Client(object):
 
     def monitors_update(self, job_id, **params):
         body = {}
-        ret = self._try(self._monitors.update, job_id, body, **params)
-        self.monitors[ret['id']] = ret
-        return ret
+        return self._try(self._monitors.update, job_id, body, **params)
 
     def notifylists_delete(self, nlid):
         return self._try(self._notifylists.delete, nlid)
@@ -240,11 +238,8 @@ class Ns1Provider(BaseProvider):
         data = {}
         if note:
             for piece in note.split(' '):
-                try:
-                    k, v = piece.split(':', 1)
-                    data[k] = v
-                except ValueError:
-                    pass
+                k, v = piece.split(':', 1)
+                data[k] = v
         return data
 
     def _data_for_geo_A(self, _type, record):
